@@ -1,6 +1,6 @@
 import express from 'express';
 
-import {uploadvideo , searchResult, deleteVideo, getownVideo, getvideo, updateVideo} from "../controller/vedio.controller.js"
+import {uploadvideo , searchResult, deleteVideo, getownVideo, getvideo, updateVideo, updateVideocontent} from "../controller/vedio.controller.js"
 import {ensureAuthenticated} from '../middleware/auth.middleware.js'
 import {uploadvideoFile} from '../middleware/multer.js'
 
@@ -15,4 +15,6 @@ router.get('/getvideo', getvideo);
 router.get('/getownvideo',ensureAuthenticated,  getownVideo);
 
 router.put('/updatevideo/:id',ensureAuthenticated, updateVideo);
+
+router.put('/updateVideocontent/:id', ensureAuthenticated, uploadvideoFile.single('file'),  updateVideocontent);
 export default router;
