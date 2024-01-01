@@ -3,6 +3,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from "uuid";
 const fileFilter = (req, file, cb) => {
     const allowedType = ["image/jpeg", "image/jpg", "image/png"];
     if (allowedType.includes(file.mimetype)) {
@@ -12,7 +13,7 @@ const fileFilter = (req, file, cb) => {
   
   const profileImage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, "uploads");
+      cb(null, "Storage/uploadimage");
     },
     filename: function (req, file, cb) {
       cb(null, uuidv4() + "-" + Date.now() + path.extname(file.originalname));

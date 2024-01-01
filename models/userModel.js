@@ -18,6 +18,7 @@ const UserSchema = new mongoose.Schema({
       default:'',
     },
     bio: { type: String },
+    token: { type: String }
   });
   
  export default mongoose.model("User", UserSchema);

@@ -69,14 +69,19 @@ export const deleteVideo = async(req, res) => {
         const tempDir = path.join(__dirname, '../Storage/uploadVideo');
         const filePath = path.join(tempDir, video.path);
         console.log(filePath);
-
-        fs.unlink(filePath, (err)=>{
-            if(err){
-                return res.status(400).json({error:err.message});;
-            }
-        });
+        try{
+            fs.unlink(filePath, (err)=>{
+                if(err){
+                    throw err;
+                }
+            });
+        }catch(error){
+            console.log(error);
+            res.status(400).json({error:error.message});
+        }
+        
     
-        return res.status(200).json({message:"Question deleted"});        
+        return res.status(200).json({message:"Video deleted"});        
     }catch(error){
         console.log(error);
         res.status(400).json({error:error.message});
@@ -163,6 +168,53 @@ export const updateVideo = async(req, res) => {
         await video.save();
     
         return res.status(200).json({message:"Video updated", Video:video});  
+    }catch(error){
+        console.log(error);
+        res.status(400).json({error:error.message});
+    }
+    
+}
+
+export const updateVideocontent = async(req, res) => {
+    try{
+        const videoid=req.params.id;
+        const video = await Video.findById(videoid);
+        
+       
+
+        if(!video){
+            return res.status(404).json({ error: "Video not found" });
+        }
+
+        if(!video.owner==req.user.id){
+            return res.status(404).json({ error: "Wrong Author" });
+        }
+
+        const videopath=req.file.filename;
+        
+        if(!videopath){
+            return res.status(404).json({ error: "Video not updated" });   
+        }
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const tempDir = path.join(__dirname, '../Storage/uploadVideo');
+        const filePath = path.join(tempDir, video.path);
+        console.log(filePath);
+        try{
+            fs.unlink(filePath, (err)=>{
+                if(err){
+                    throw err;
+                }
+            });
+        }catch(error){
+            console.log(error);
+            res.status(400).json({error:error.message});
+        }
+        
+        video.path=videopath;
+        await video.save();
+    
+        return res.status(200).json({message:"Video content updated", Video:video});  
     }catch(error){
         console.log(error);
         res.status(400).json({error:error.message});

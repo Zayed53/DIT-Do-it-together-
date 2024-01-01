@@ -1,6 +1,8 @@
 import User from '../models/userModel.js'
 import bcrypt from "bcrypt";
 import passport from "passport";
+import otpgenerator from "otp-generator";
+import sendPasswordResetEmail from "../config/nodemailer.js"
 
 export const postRegister = async (req, res) => {
     console.log("req check", req.body)
@@ -129,3 +131,99 @@ export const postRegister = async (req, res) => {
       
     })(req, res, next);
   }
+
+  export const getemail = async(req, res) => {
+    try{
+      const {email} = req.body
+      const user= await User.findOne({email:email});
+      if(!user){
+        return res.status(400).json({error:"No user Found"});        
+      }
+      const otp=otpgenerator.generate(6, { upperCaseAlphabets: true, lowerCaseAlphabets: true, specialChars: false })
+      user.token=otp;
+
+      await user.save();
+
+      await sendPasswordResetEmail(user.name, user.email, otp);
+
+      return res.status(200).json({message:"Varification mail is sent. please check your mail"});
+
+    }
+    catch (error) {
+      console.log("Error: ", error);
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  export const getpasswordUpdate = async (req, res) => {
+    try{
+      const {otp, email, newpassword} = req.body;
+      const user= await User.findOne({email:email});
+      if(!user){
+        return res.status(400).json({error:"No user Found"});        
+      }
+      if(!user.token===otp){
+        return res.status(400).json({error:"OTP didn't match"});        
+      }
+      const salt = await bcrypt.genSalt(10);
+      const hashedNewPassword = await bcrypt.hash(newpassword, salt);
+      user.password=hashedNewPassword;
+      user.token=null;
+      await user.save();
+      return res.status(200).json({message:"Password Updated"});
+    }
+    catch (error) {
+      console.log("Error: ", error);
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  export const uploadimage = async (req, res) =>{
+    try{
+        const user_id=req.user.id;
+        const image=req.file.filename;
+        const user=await User.findById(user_id);
+        if(!image){
+          return res.status(400).json({error:"No image Found"});     
+        }
+        user.profile_image=image;
+
+        await user.save();
+
+
+        return res.status(200).json({message:"image uploaded successfully"});
+        
+    }catch(error){
+        console.log(error);
+        return res.status(400).json({error:error.message});
+    }
+   
+}
+
+export const update_profile = async (req, res) =>{
+  try{
+      const user_id=req.user.id;
+      const {name, bio } = req.body;
+      const user=await User.findById(user_id);
+      if(!user){
+        return res.status(400).json({error:"No User Found"});     
+      }
+
+      if(name){
+        user.name=name;
+      }
+      if(bio){
+        user.bio=bio;
+      }
+
+      await user.save();
+
+
+      return res.status(200).json({message:"User information updated successfully"});
+      
+  }catch(error){
+      console.log(error);
+      return res.status(400).json({error:error.message});
+  }
+ 
+}
